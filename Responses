@@ -1,0 +1,15 @@
+Item:
+    "name" as string
+    "id" as string
+    "price" as number times 100
+    "categoryID" as string
+    "currency" as string
+    "image" as string (location of image in filesystem)
+
+User:
+    "age" as string
+    "class" as Class category
+    "id" as string
+    "username" as string
+    "credit" as number times 100
+    "currency" as string

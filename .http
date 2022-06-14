@@ -1,0 +1,8 @@
+POST http://localhost:3080/api/products/create
+
+Content-Type: application/json
+
+{
+    "password": "Milch",
+    "user": "milch"
+}
