@@ -1,14 +1,44 @@
 import { Error as ErrorType, Order } from "../../Types";
 import { Items, User } from "../../Schemas";
 
+import PayPal from "./paypal";
 import Recent from "./recent";
 import { Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
-let orderArray: any = [];
+export let orderArray: {
+  price: number;
+  currency: string;
+  date: Date;
+  items: any[];
+  id: string;
+  orderID: number;
+}[] = [];
 router.use("/recent", Recent);
+router.use("/paypal", PayPal);
 let OrderCounter = 100;
+
+const AddToOrderArray = (item: {
+  price: number;
+  currency: string;
+  date: Date;
+  items: any[];
+  id: string;
+  orderID: number;
+}) => {
+  orderArray.push(item);
+};
+
+const GetOrderCounter = () => {
+  return OrderCounter;
+};
+
+const IncrementOrderCounter = () => {
+  OrderCounter++;
+  return;
+};
+
 router.post("/", async (req, res) => {
   /*
     *Aspected Response
@@ -22,11 +52,16 @@ router.post("/", async (req, res) => {
         price: number
     }
     */
-  // FIXME Not seeing that req.user is undefined
 
   if (req.user === ErrorType.userNotFound || req.user === undefined) {
     res.status(403);
     res.send({ success: false, message: "Please log in and try again." });
+    res.end();
+    return;
+  }
+  if (Object.keys(req.body).length === 0) {
+    res.status(400);
+    res.send({ success: false, message: "Empty Order." });
     res.end();
     return;
   }
@@ -105,7 +140,8 @@ router.post("/", async (req, res) => {
 
   OrderCounter++;
   // @ts-ignore
-  (PlaceOrder.name = req.user.username), orderArray.push(PlaceOrder);
+  PlaceOrder.name = req.user.username;
+  orderArray.push(PlaceOrder);
   res.status(200).send({
     success: true,
     orderID: PlaceOrder.orderID,
@@ -128,4 +164,5 @@ router.delete("/", (req, res) => {
   orderArray = orderArray.filter((order: any) => order.orderID !== req.body.id);
   res.sendStatus(200);
 });
+export { AddToOrderArray, GetOrderCounter, IncrementOrderCounter };
 export default router;

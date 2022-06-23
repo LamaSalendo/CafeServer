@@ -23,15 +23,31 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.IncrementOrderCounter = exports.GetOrderCounter = exports.AddToOrderArray = exports.orderArray = void 0;
 const Types_1 = require("../../Types");
 const Schemas_1 = require("../../Schemas");
+const paypal_1 = __importDefault(require("./paypal"));
 const recent_1 = __importDefault(require("./recent"));
 const express_1 = require("express");
 const uuid_1 = require("uuid");
 const router = (0, express_1.Router)();
-let orderArray = [];
+exports.orderArray = [];
 router.use("/recent", recent_1.default);
+router.use("/paypal", paypal_1.default);
 let OrderCounter = 100;
+const AddToOrderArray = (item) => {
+    exports.orderArray.push(item);
+};
+exports.AddToOrderArray = AddToOrderArray;
+const GetOrderCounter = () => {
+    return OrderCounter;
+};
+exports.GetOrderCounter = GetOrderCounter;
+const IncrementOrderCounter = () => {
+    OrderCounter++;
+    return;
+};
+exports.IncrementOrderCounter = IncrementOrderCounter;
 router.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     /*
       *Aspected Response
@@ -45,11 +61,16 @@ router.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
           price: number
       }
       */
-    // FIXME Not seeing that req.user is undefined
     var _a;
     if (req.user === Types_1.Error.userNotFound || req.user === undefined) {
         res.status(403);
         res.send({ success: false, message: "Please log in and try again." });
+        res.end();
+        return;
+    }
+    if (Object.keys(req.body).length === 0) {
+        res.status(400);
+        res.send({ success: false, message: "Empty Order." });
         res.end();
         return;
     }
@@ -109,7 +130,8 @@ router.post("/", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     }
     OrderCounter++;
     // @ts-ignore
-    (PlaceOrder.name = req.user.username), orderArray.push(PlaceOrder);
+    PlaceOrder.name = req.user.username;
+    exports.orderArray.push(PlaceOrder);
     res.status(200).send({
         success: true,
         orderID: PlaceOrder.orderID,
@@ -121,7 +143,7 @@ router.get("/", (req, res) => {
     //@ts-ignore
     if (!((_a = req.user) === null || _a === void 0 ? void 0 : _a.admin))
         return res.sendStatus(403);
-    res.send(orderArray);
+    res.send(exports.orderArray);
 });
 router.delete("/", (req, res) => {
     var _a;
@@ -132,7 +154,7 @@ router.delete("/", (req, res) => {
         res.sendStatus(400);
         return;
     }
-    orderArray = orderArray.filter((order) => order.orderID !== req.body.id);
+    exports.orderArray = exports.orderArray.filter((order) => order.orderID !== req.body.id);
     res.sendStatus(200);
 });
 exports.default = router;
